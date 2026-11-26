@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[실화 극장] 황혼불륜과 적반하장 황혼이혼 - 60초 쇼츠 렌더러</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
+    body {
+      font-family: 'Pretendard', sans-serif;
+      background-color: #08080a;
+      color: #fff;
+    }
+    .phone-canvas-box {
+      width: 380px;
+      height: 760px;
+      max-height: 92vh;
+      border-radius: 36px;
+      box-shadow: 0 25px 60px -15px rgba(220, 38, 38, 0.3), 0 0 0 10px #1a1a1e;
+      position: relative;
+      overflow: hidden;
+      background: #000;
+    }
+    .neon-border-red {
+      box-shadow: 0 0 25px rgba(239, 68, 68, 0.4);
+    }
+    .shake-anim {
+      animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-1px, 0, 0); }
+      20%, 80% { transform: translate3d(2px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+      40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+    .pulse-danger {
+      animation: pulseDanger 1.2s infinite;
+    }
+    @keyframes pulseDanger {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.8)); }
+      50% { transform: scale(1.05); filter: drop-shadow(0 0 30px rgba(239, 68, 68, 1)); }
+    }
+    .kinetic-title {
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.95), 0 0 10px rgba(239, 68, 68, 0.6);
+      word-break: keep-all;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col lg:flex-row items-center justify-center p-4 gap-8">
+
+  <!-- 왼쪽: 9:16 모바일 쇼츠 캔버스 비디오 렌더러 -->
+  <div class="phone-canvas-box flex flex-col justify-between select-none">
+    
+    <!-- 상단 상태바 & 노치 -->
+    <div class="relative z-30 pt-3 px-6 flex justify-between items-center text-xs text-stone-400 bg-gradient-to-b from-black/80 to-transparent">
+      <span id="clockDisplay">23:45</span>
+      <div class="w-20 h-4 bg-black rounded-full mx-auto"></div>
+      <div class="flex items-center gap-1.5 text-[10px]">
+        <i class="fa-solid fa-signal"></i>
+        <i class="fa-solid fa-battery-three-quarters text-red-500"></i>
+      </div>
+    </div>
+
+    <!-- 비디오 씬 애니메이션 레이어 -->
+    <div id="sceneContainer" class="absolute inset-0 flex flex-col items-center justify-center px-6 text-center z-10 transition-all duration-300">
+      <!-- 씬 콘텐츠가 JS로 동적 교체됨 -->
+    </div>
+
+    <!-- 우측 오버레이 쇼츠 액션 아이콘들 -->
+    <div class="absolute right-3 bottom-24 flex flex-col items-center gap-5 z-30 text-white text-xs">
+      <div class="flex flex-col items-center gap-1">
+        <div class="w-11 h-11 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-xl text-red-500">
+          <i class="fa-solid fa-heart"></i>
+        </div>
+        <span class="font-bold text-[11px]">18.4K</span>
+      </div>
+
+      <div class="flex flex-col items-center gap-1">
+        <div class="w-11 h-11 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-xl">
+          <i class="fa-solid fa-comment-dots"></i>
+        </div>
+        <span class="font-bold text-[11px]">1,429</span>
+      </div>
+
+      <div class="flex flex-col items-center gap-1">
+        <div class="w-11 h-11 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-xl">
+          <i class="fa-solid fa-share"></i>
+        </div>
+        <span class="text-[10px]">공유</span>
+      </div>
+
+      <div class="w-10 h-10 rounded-full border border-red-500/50 bg-stone-900 flex items-center justify-center text-red-400 mt-1 shadow-lg">
+        <i class="fa-solid fa-scale-balanced text-sm"></i>
+      </div>
+    </div>
+
+    <!-- 하단 채널 정보 및 자막 오버레이 -->
+    <div class="relative z-30 p-5 pb-6 bg-gradient-to-t from-black via-black/85 to-transparent">
+      <!-- 채널 정보 -->
+      <div class="flex items-center gap-2 mb-2">
+        <div class="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white font-black text-xs shadow-md">
+          실화
+        </div>
+        <span class="font-bold text-sm tracking-tight text-stone-100">@사건사고_법률사이다</span>
+        <button class="ml-2 px-3 py-0.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-full shadow">
+          구독
+        </button>
+      </div>
+
+      <!-- 영상 타이틀 -->
+      <p class="text-xs text-stone-300 line-clamp-2 leading-relaxed mb-3 font-medium">
+        "30년 산 아내가 등산 동호회 총무와 모텔을..." 적반하장 황혼이혼의 최후 #황혼이혼 #황혼불륜 #실화
+      </p>
+
+      <!-- 프로그레스 타임 바 -->
+      <div class="w-full bg-white/20 h-1.5 rounded-full overflow-hidden cursor-pointer" onclick="seek(event)">
+        <div id="progressBar" class="bg-red-600 h-full w-0 transition-all duration-200"></div>
+      </div>
+      <div class="flex justify-between text-[10px] text-stone-400 mt-1 font-mono">
+        <span id="currentTimeLabel">00:00</span>
+        <span id="totalDurationLabel">00:58</span>
+      </div>
+    </div>
+
+    <!-- 재생 오버레이 버튼 -->
+    <button id="centerPlayBtn" onclick="togglePlay()" class="absolute inset-0 z-20 flex items-center justify-center bg-black/40 hover:bg-black/30 transition backdrop-blur-[2px]">
+      <div class="w-16 h-16 rounded-full bg-red-600 text-white flex items-center justify-center text-2xl shadow-2xl pl-1 neon-border-red">
+        <i id="centerPlayIcon" class="fa-solid fa-play"></i>
+      </div>
+    </button>
+  </div>
+
+  <!-- 오른쪽: 렌더러 조작 패널 및 대본 큐시트 -->
+  <div class="w-full max-w-xl bg-stone-900 border border-stone-800 rounded-2xl p-6 shadow-2xl flex flex-col gap-4">
+    <div class="flex items-center justify-between border-b border-stone-800 pb-3">
+      <div>
+        <h2 class="text-xl font-black text-red-500 flex items-center gap-2">
+          <i class="fa-solid fa-film"></i> 60초 황혼불륜·황혼이혼 쇼츠 렌더러
+        </h2>
+        <p class="text-xs text-stone-400 mt-0.5">초반 3초 파괴적 후킹 · 실화 사이다 사례 중심</p>
+      </div>
+      <span class="text-xs bg-red-950/80 text-red-400 border border-red-800/60 px-3 py-1 rounded-full font-bold">
+        고유지율 큐시트 v2
+      </span>
+    </div>
+
+    <!-- 핵심 실행 & 렌더링 액션 버튼 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <button onclick="togglePlay()" id="sidePlayBtn" class="py-3 px-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 text-sm shadow-lg transition">
+        <i class="fa-solid fa-play"></i> <span id="sidePlayText">실시간 프리뷰 재생</span>
+      </button>
+      <button onclick="startVideoExport()" id="exportBtn" class="py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 text-sm shadow-lg transition">
+        <i class="fa-solid fa-download"></i> <span id="exportText">영상 파일(WebM) 렌더링</span>
+      </button>
+    </div>
+
+    <!-- 상태 인디케이터 -->
+    <div id="renderStatus" class="hidden bg-stone-950 p-3 rounded-xl border border-emerald-500/40 text-xs text-emerald-400 flex items-center justify-between">
+      <span class="flex items-center gap-2">
+        <i class="fa-solid fa-circle-notch fa-spin"></i> 영상을 렌더링 중입니다... (잠시만 기다려주세요)
+      </span>
+      <span id="renderProgress" class="font-mono font-bold">0%</span>
+    </div>
+
+    <!-- 음성 및 속도 옵션 -->
+    <div class="grid grid-cols-2 gap-2 bg-stone-950 p-3 rounded-xl border border-stone-800 text-xs">
+      <div class="flex items-center justify-between">
+        <span class="text-stone-300 flex items-center gap-1.5">
+          <i class="fa-solid fa-microphone-lines text-amber-400"></i> AI 나레이션 TTS
+        </span>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="ttsToggle" checked class="sr-only peer">
+          <div class="w-8 h-4 bg-stone-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-red-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all"></div>
+        </label>
+      </div>
+
+      <div class="flex items-center justify-between pl-3 border-l border-stone-800">
+        <span class="text-stone-300">나레이션 속도</span>
+        <select id="speedSelect" class="bg-stone-800 text-stone-200 rounded px-2 py-0.5 text-xs border border-stone-700">
+          <option value="1.0">1.0x (보통)</option>
+          <option value="1.1" selected>1.1x (후킹형 빠름)</option>
+          <option value="1.2">1.2x (긴박형)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 60초 실전 큐시트 타임라인 목록 -->
+    <div class="flex-1 overflow-y-auto max-h-72 space-y-2 pr-1" id="cueList">
+      <!-- 씬 아이템들 -->
+    </div>
+
+    <!-- 메타데이터 & 대본 복사 버튼 -->
+    <div class="pt-2 border-t border-stone-800 flex justify-between items-center text-xs text-stone-400">
+      <span class="flex items-center gap-1 text-stone-400">
+        <i class="fa-solid fa-check-double text-red-500"></i> 알고리즘 낚시 방지 검수 통과
+      </span>
+      <button onclick="copyFullScript()" class="text-stone-200 hover:text-white flex items-center gap-1 font-bold bg-stone-800 px-3 py-1.5 rounded-lg border border-stone-700">
+        <i class="fa-regular fa-copy"></i> 전체 큐시트 복사
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // 60초 황혼이혼·황혼불륜 고유지율 실화 대본 큐시트
+    const scenes = [
+      {
+        start: 0,
+        end: 4,
+        section: "0~4초 [파괴적 후킹]",
+        badge: "HOOKING",
+        title: "등산 동호회 총무와 모텔",
+        speech: "30년 산 아내가 등산 동호회 총무와 모텔을 드나들다 걸렸습니다! 그런데 더 기가 막힌 건 지금부터입니다.",
+        render: () => `
+          <div class="space-y-4 shake-anim">
+            <div class="w-24 h-24 mx-auto rounded-3xl bg-red-600/30 border-2 border-red-500 flex items-center justify-center text-4xl text-red-500 pulse-danger">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="bg-black/85 backdrop-blur-md px-4 py-3 rounded-2xl border border-red-500/60 neon-border-red">
+              <span class="text-red-500 font-black text-xs tracking-widest block mb-1">실제 법원 판례 실화</span>
+              <h1 class="text-2xl font-black text-yellow-400 kinetic-title leading-tight">
+                "30년 산 아내가<br><span class="text-white">등산 총무와 모텔을?!"</span>
+              </h1>
+            </div>
+          </div>
+        `
+      },
+      {
+        start: 5,
+        end: 16,
+        section: "5~16초 [문제 발단 & 배신]",
+        badge: "BETRAYAL",
+        title: "은퇴 남편의 뒤통수",
+        speech: "퇴직금 털어 평생 가족만 부양해 온 62세 박 모 씨. 어느 날 밤 아내 폰에 뜬 문자 한 통, '자기야, 남편 몰래 이번 주말 단풍 여행 알지?' 알고 보니 3년째 지속된 불륜이었습니다.",
+        render: () => `
+          <div class="space-y-4">
+            <div class="w-60 mx-auto bg-stone-900/90 border border-red-500/50 rounded-2xl p-3.5 shadow-2xl text-left">
+              <div class="flex items-center justify-between text-[11px] text-stone-400 border-b border-stone-800 pb-1 mb-2">
+                <span class="text-red-400 font-bold"><i class="fa-solid fa-bell"></i> 심야 알림 (밤 11:42)</span>
+                <span>비밀대화방</span>
+              </div>
+              <div class="bg-red-950/40 border border-red-900/60 text-red-200 p-2.5 rounded-xl text-xs leading-relaxed font-sans">
+                "자기야, 남편 속이고 이번 주말 단풍 여행 꼭 나와 알았지? 모텔 예약했어 ❤️"
+              </div>
+            </div>
+            <div class="bg-black/80 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-stone-700">
+              <h2 class="text-lg font-black text-white kinetic-title">
+                평생 가족만 본 남편의 퇴직금,<br><span class="text-red-400">3년 불륜에 짓밟혔다</span>
+              </h2>
+            </div>
+          </div>
+        `
+      },
+      {
+        start: 17,
+        end: 32,
+        section: "17~32초 [적반하장 전개]",
+        badge: "OUTRAGE",
+        title: "적반하장 5:5 재산분할 소송",
+        speech: "현장을 덮치자 아내는 사과는커녕, '당신이 평생 나 외롭게 했잖아!'라며 먼저 황혼이혼 소송을 걸었습니다. 심지어 남편 퇴직금과 아파트 5대 5 분할까지 당당히 요구했는데요.",
+        render: () => `
+          <div class="space-y-4">
+            <div class="w-24 h-24 mx-auto rounded-3xl bg-yellow-500/20 border-2 border-yellow-500/60 flex items-center justify-center text-4xl text-yellow-400 shadow-xl">
+              <i class="fa-solid fa-file-shield"></i>
+            </div>
+            <div class="bg-black/85 backdrop-blur-md px-4 py-3 rounded-2xl border border-yellow-500/50">
+              <span class="text-yellow-400 font-bold text-xs block mb-1">뻔뻔한 적반하장의 극치</span>
+              <h2 class="text-xl font-black text-white kinetic-title leading-tight">
+                "당신이 외롭게 했잖아!"<br>
+                <span class="text-yellow-400">아파트·퇴직금 5:5 분할 요구?!</span>
+              </h2>
+            </div>
+          </div>
+        `
+      },
+      {
+        start: 33,
+        end: 45,
+        section: "33~45초 [법원 사이다 반전]",
+        badge: "VERDICT",
+        title: "법원의 철퇴 판결",
+        speech: "결과는 어땠을까요? 재판부는 유책배우자인 아내의 이혼 청구를 전격 기각하고, 상간남에게 위자료 4천만 원 지급 명령을 내렸습니다! 불륜 저지르고 재산 반 갈라가려던 꿈이 박살 난 겁니다.",
+        render: () => `
+          <div class="space-y-4">
+            <div class="w-24 h-24 mx-auto rounded-3xl bg-emerald-500/20 border-2 border-emerald-400/80 flex items-center justify-center text-4xl text-emerald-400 shadow-2xl">
+              <i class="fa-solid fa-gavel"></i>
+            </div>
+            <div class="bg-black/85 backdrop-blur-md px-4 py-3 rounded-2xl border border-emerald-500/50">
+              <span class="text-emerald-400 font-black text-xs block mb-1">법원 사이다 판결 선고</span>
+              <h2 class="text-2xl font-black text-yellow-300 kinetic-title">
+                유책배우자 이혼 청구 기각!<br>
+                <span class="text-white">상간남 위자료 4천만 원 배상!</span>
+              </h2>
+            </div>
+          </div>
+        `
+      },
+      {
+        start: 46,
+        end: 58,
+        section: "46~58초 [마무리 & 댓글 CTA]",
+        badge: "ACTION",
+        title: "내 재산 지키는 특약 3원칙",
+        speech: "하지만 방심하면 은퇴 자금 다 뺏길 수 있습니다. 황혼불륜 시 내 재산 지키는 핵심 증거 수집 3원칙, 지금 바로 고정댓글에서 확인하세요!",
+        render: () => `
+          <div class="space-y-4">
+            <div class="w-24 h-24 mx-auto rounded-3xl bg-red-600/20 border-2 border-red-500 flex items-center justify-center text-4xl text-red-400 shadow-xl animate-pulse">
+              <i class="fa-solid fa-comment-medical"></i>
+            </div>
+            <div class="bg-black/90 backdrop-blur-md px-4 py-3 rounded-2xl border border-red-500/60 neon-border-red">
+              <h2 class="text-xl font-black text-yellow-400 kinetic-title mb-1">
+                내 은퇴 퇴직금 지키려면?
+              </h2>
+              <p class="text-xs text-stone-200 leading-relaxed font-bold">
+                황혼불륜 대응 <span class="text-red-400 underline">3대 합법 증거 수집법</span><br>
+                지금 <span class="text-yellow-300">고정댓글 링크</span>에서 확인하세요!
+              </p>
+            </div>
+          </div>
+        `
+      }
+    ];
+
+    const totalDuration = 58;
+    let currentTime = 0;
+    let isPlaying = false;
+    let timer = null;
+    let currentSceneIndex = -1;
+    let synth = window.speechSynthesis;
+
+    // 큐 리스트 생성
+    const cueListEl = document.getElementById("cueList");
+    scenes.forEach((sc, idx) => {
+      const item = document.createElement("div");
+      item.id = `cue-item-${idx}`;
+      item.className = "p-3 rounded-xl bg-stone-950 border border-stone-800 transition cursor-pointer hover:border-stone-700";
+      item.onclick = () => jumpToTime(sc.start);
+      item.innerHTML = `
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-[11px] font-black text-red-400 tracking-wider">${sc.section}</span>
+          <span class="text-[10px] font-mono text-stone-500">${formatTime(sc.start)} ~ ${formatTime(sc.end)}</span>
+        </div>
+        <div class="text-xs font-bold text-stone-200">${sc.title}</div>
+        <div class="text-[11px] text-stone-400 truncate mt-0.5">${sc.speech}</div>
+      `;
+      cueListEl.appendChild(item);
+    });
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60).toString().padStart(2, '0');
+      const s = Math.floor(sec % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function updateScene(time) {
+      const sceneIndex = scenes.findIndex(s => time >= s.start && time <= s.end);
+      if (sceneIndex !== -1 && sceneIndex !== currentSceneIndex) {
+        currentSceneIndex = sceneIndex;
+        const currentScene = scenes[sceneIndex];
+
+        // 씬 렌더링
+        const container = document.getElementById("sceneContainer");
+        container.innerHTML = currentScene.render();
+
+        // 큐 하이라이트
+        scenes.forEach((_, i) => {
+          const el = document.getElementById(`cue-item-${i}`);
+          if (i === sceneIndex) {
+            el.className = "p-3 rounded-xl bg-red-950/40 border-2 border-red-500 shadow-lg transition";
+            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          } else {
+            el.className = "p-3 rounded-xl bg-stone-950 border border-stone-800 transition cursor-pointer hover:border-stone-700";
+          }
+        });
+
+        // TTS 재생
+        if (isPlaying && document.getElementById("ttsToggle").checked && synth) {
+          synth.cancel();
+          const utter = new SpeechSynthesisUtterance(currentScene.speech);
+          utter.lang = 'ko-KR';
+          const rateVal = parseFloat(document.getElementById("speedSelect").value) || 1.1;
+          utter.rate = rateVal;
+          synth.speak(utter);
+        }
+      }
+    }
+
+    function tick() {
+      if (currentTime >= totalDuration) {
+        pausePlayback();
+        currentTime = totalDuration;
+        updateUI();
+        return;
+      }
+      currentTime += 1;
+      updateUI();
+    }
+
+    function updateUI() {
+      const pct = (currentTime / totalDuration) * 100;
+      document.getElementById("progressBar").style.width = `${pct}%`;
+      document.getElementById("currentTimeLabel").innerText = formatTime(currentTime);
+      updateScene(currentTime);
+    }
+
+    function togglePlay() {
+      if (isPlaying) {
+        pausePlayback();
+      } else {
+        startPlayback();
+      }
+    }
+
+    function startPlayback() {
+      if (currentTime >= totalDuration) {
+        currentTime = 0;
+      }
+      isPlaying = true;
+      document.getElementById("centerPlayBtn").classList.add("hidden");
+      document.getElementById("sidePlayText").innerText = "일시정지";
+      document.getElementById("sidePlayBtn").classList.replace("bg-red-600", "bg-amber-600");
+
+      updateScene(currentTime);
+      timer = setInterval(tick, 1000);
+    }
+
+    function pausePlayback() {
+      isPlaying = false;
+      clearInterval(timer);
+      if (synth) synth.cancel();
+      document.getElementById("centerPlayBtn").classList.remove("hidden");
+      document.getElementById("sidePlayText").innerText = "실시간 프리뷰 재생";
+      document.getElementById("sidePlayBtn").classList.replace("bg-amber-600", "bg-red-600");
+    }
+
+    function jumpToTime(sec) {
+      currentTime = sec;
+      updateUI();
+      if (!isPlaying) startPlayback();
+    }
+
+    function seek(e) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const pct = Math.max(0, Math.min(1, clickX / rect.width));
+      currentTime = Math.floor(pct * totalDuration);
+      updateUI();
+    }
+
+    function copyFullScript() {
+      const fullText = scenes.map(s => `[${s.section}] ${s.title}\n내레이션: ${s.speech}`).join("\n\n");
+      navigator.clipboard.writeText(fullText).then(() => {
+        alert("황혼불륜 60초 큐시트 전체가 복사되었습니다!");
+      });
+    }
+
+    // 실제 Canvas 기반 WebM 비디오 녹화 & 다운로드 엔진
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let recordCanvas = document.createElement('canvas');
+    recordCanvas.width = 720;
+    recordCanvas.height = 1280;
+    let recordCtx = recordCanvas.getContext('2d');
+    let isRecording = false;
+
+    function drawFrameToCanvas() {
+      if (!isRecording) return;
+      const currentScene = scenes[currentSceneIndex] || scenes[0];
+      
+      // 배경 그리기
+      recordCtx.fillStyle = "#0c0d11";
+      recordCtx.fillRect(0, 0, 720, 1280);
+
+      // 상단 붉은 그라데이션
+      const grad = recordCtx.createLinearGradient(0, 0, 0, 400);
+      grad.addColorStop(0, "rgba(220, 38, 38, 0.4)");
+      grad.addColorStop(1, "transparent");
+      recordCtx.fillStyle = grad;
+      recordCtx.fillRect(0, 0, 720, 400);
+
+      // 뱃지
+      recordCtx.fillStyle = "#ef4444";
+      recordCtx.font = "bold 28px Pretendard, sans-serif";
+      recordCtx.textAlign = "center";
+      recordCtx.fillText(`[실화 극장] ${currentScene.section}`, 360, 260);
+
+      // 메인 타이틀
+      recordCtx.fillStyle = "#facc15";
+      recordCtx.font = "900 52px Pretendard, sans-serif";
+      recordCtx.fillText(currentScene.title, 360, 360);
+
+      // 본문 텍스트 (줄바꿈 처리)
+      recordCtx.fillStyle = "#ffffff";
+      recordCtx.font = "bold 36px Pretendard, sans-serif";
+      wrapText(recordCtx, currentScene.speech, 360, 600, 620, 56);
+
+      // 하단 자막 바
+      recordCtx.fillStyle = "rgba(0,0,0,0.85)";
+      recordCtx.fillRect(40, 1060, 640, 140);
+      recordCtx.fillStyle = "#f87171";
+      recordCtx.font = "bold 26px Pretendard, sans-serif";
+      recordCtx.fillText("@사건사고_법률사이다 · 황혼불륜과 적반하장 황혼이혼", 360, 1110);
+      recordCtx.fillStyle = "#fef08a";
+      recordCtx.font = "900 32px Pretendard, sans-serif";
+      recordCtx.fillText("고정댓글에서 무료 법률 체크리스트 확인!", 360, 1160);
+
+      if (isRecording) {
+        requestAnimationFrame(drawFrameToCanvas);
+      }
+    }
+
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(' ');
+      let line = '';
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && n > 0) {
+          ctx.fillText(line, x, y);
+          line = words[n] + ' ';
+          y += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, x, y);
+    }
+
+    async function startVideoExport() {
+      const exportBtn = document.getElementById("exportBtn");
+      const renderStatus = document.getElementById("renderStatus");
+      const renderProgress = document.getElementById("renderProgress");
+
+      exportBtn.disabled = true;
+      exportBtn.classList.replace("bg-emerald-600", "bg-stone-700");
+      renderStatus.classList.remove("hidden");
+
+      recordedChunks = [];
+      const stream = recordCanvas.captureStream(30); // 30 FPS
+      mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = '황혼불륜_적반하장_황혼이혼_60초쇼츠.webm';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }, 100);
+        renderStatus.innerHTML = '<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> 다운로드 완료! \'황혼불륜_적반하장_황혼이혼_60초쇼츠.webm\' 파일이 저장되었습니다.</span>';
+        exportBtn.disabled = false;
+        exportBtn.classList.replace("bg-stone-700", "bg-emerald-600");
+        isRecording = false;
+      };
+
+      isRecording = true;
+      drawFrameToCanvas();
+      mediaRecorder.start();
+
+      resetPlayback();
+      startPlayback();
+
+      const progressInterval = setInterval(() => {
+        const pct = Math.min(100, Math.floor((currentTime / totalDuration) * 100));
+        renderProgress.innerText = `${pct}%`;
+        if (currentTime >= totalDuration) {
+          clearInterval(progressInterval);
+          if (mediaRecorder && mediaRecorder.state !== "inactive") {
+            mediaRecorder.stop();
+          }
+        }
+      }, 500);
+    }
+
+    function resetPlayback() {
+      pausePlayback();
+      currentTime = 0;
+      currentSceneIndex = -1;
+      updateUI();
+    }
+
+    updateUI();
+  </script>
+</body>
+</html>
